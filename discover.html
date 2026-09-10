@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#0a0a0f">
+    <title>ZEPHYR - اكتشاف</title>
+
+    <!-- Firebase SDK -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+    import { getFirestore, collection, getDocs, query, limit, doc, getDoc, updateDoc, arrayUnion, arrayRemove, increment, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyC-stk7sia-kJ_PzVMuSI5gmyqR5yTtR_A",
+            authDomain: "zephyr-8df18.firebaseapp.com",
+            projectId: "zephyr-8df18",
+            storageBucket: "zephyr-8df18.firebasestorage.app",
+            messagingSenderId: "836989543748",
+            appId: "1:836989543748:web:fc07d9e4a79172482ce311"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        window.ZephyrDiscover = {
+            auth, db, onAuthStateChanged,
+            collection, getDocs, query, limit, doc, getDoc, updateDoc, arrayUnion, arrayRemove, increment, addDoc, serverTimestamp
+        };
+    </script>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@400;600;700&display=swap');
+
+        :root {
+            --bg-main: #0a0a0f;
+            --bg-card: rgba(10, 10, 20, 0.88);
+            --bg-input: rgba(0, 0, 0, 0.8);
+            --primary: #00e5ff;
+            --primary-hover: #00b8d4;
+            --primary-glow: rgba(0, 229, 255, 0.55);
+            --accent: #ff00e5;
+            --accent-glow: rgba(255, 0, 229, 0.45);
+            --gold: #ffcc00;
+            --text-main: #f0f8ff;
+            --text-muted: #a0b0c0;
+            --border-color: rgba(0, 229, 255, 0.32);
+            --danger: #ef4444;
+            --success: #10b981;
+            --radius-sm: 8px;
+            --radius-md: 14px;
+            --radius-lg: 22px;
+            --radius-pill: 999px;
+            --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            --font-display: 'Orbitron', sans-serif;
+            --font-body: 'Rajdhani', sans-serif;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; font-family: var(--font-body); min-width: 0; }
+
+        body {
+            background-color: var(--bg-main); color: var(--text-main); min-height: 100vh;
+            display: flex; justify-content: center;
+            background-image:
+                linear-gradient(rgba(0, 229, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 0, 229, 0.03) 1px, transparent 1px),
+                radial-gradient(circle at 12% 15%, rgba(0, 229, 255, 0.10) 0%, transparent 45%),
+                radial-gradient(circle at 88% 85%, rgba(255, 0, 229, 0.09) 0%, transparent 45%);
+            background-size: 40px 40px, 40px 40px, 100% 100%, 100% 100%;
+            background-attachment: fixed; -webkit-font-smoothing: antialiased;
+        }
+
+        .app-layout { width: 100%; max-width: 800px; min-height: 100vh; display: flex; flex-direction: column; position: relative; }
+
+        .header {
+            display: flex; align-items: center; gap: 12px;
+            padding: 10px 16px; background: rgba(10, 10, 15, 0.92);
+            backdrop-filter: blur(18px); border-bottom: 1px solid var(--border-color);
+            position: sticky; top: 0; z-index: 100;
+        }
+        .back-btn {
+            display: flex; align-items: center; justify-content: center;
+            width: 34px; height: 34px; border-radius: 50%; background: transparent; border: none;
+            color: var(--text-main); cursor: pointer; flex-shrink: 0;
+        }
+        .back-btn svg { width: 22px; height: 22px; }
+        .header h1 { font-family: var(--font-display); font-size: 1.05rem; font-weight: 700; letter-spacing: 1px; }
+
+        .main-container { flex: 1; padding: 14px; display: flex; flex-direction: column; gap: 18px; max-width: 620px; margin: 0 auto; padding-bottom: 40px; width: 100%; }
+
+        .search-box { position: relative; }
+        .search-box input {
+            width: 100%; background: var(--bg-input); border: 1px solid var(--border-color);
+            border-radius: var(--radius-pill); padding: 12px 44px 12px 16px; color: var(--text-main);
+            outline: none; font-size: 0.95rem; transition: var(--transition);
+        }
+        .search-box input:focus { border-color: var(--primary); box-shadow: 0 0 12px rgba(0,229,255,0.2); }
+        .search-box svg {
+            position: absolute; top: 50%; right: 16px; transform: translateY(-50%);
+            width: 18px; height: 18px; fill: none; stroke: var(--text-muted); stroke-width: 2;
+        }
+
+        .section-title { font-size: 0.85rem; color: var(--text-muted); font-weight: 700; margin-bottom: 2px; }
+
+        .user-row {
+            display: flex; align-items: center; gap: 12px; padding: 12px;
+            background: var(--bg-card); border: 1px solid var(--border-color);
+            border-radius: var(--radius-md); backdrop-filter: blur(12px); cursor: pointer;
+            transition: var(--transition);
+        }
+        .user-row:hover { border-color: var(--primary); }
+        .user-avatar {
+            width: 44px; height: 44px; border-radius: 50%; flex-shrink: 0;
+            background: linear-gradient(135deg, var(--accent), var(--primary));
+            display: flex; align-items: center; justify-content: center;
+            font-weight: 700; font-size: 1.05rem; color: #08080d; box-shadow: 0 0 10px var(--primary-glow);
+        }
+        .user-info { flex: 1; min-width: 0; }
+        .user-name { font-weight: 700; font-size: 0.92rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .user-bio { font-size: 0.75rem; color: var(--text-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-top: 1px; }
+        .btn-follow-mini {
+            font-size: 0.72rem; font-weight: 700; padding: 6px 14px; border-radius: var(--radius-pill);
+            background: linear-gradient(135deg, var(--primary), var(--accent)); color: #08080d; border: none;
+            cursor: pointer; flex-shrink: 0; transition: var(--transition);
+        }
+        .btn-follow-mini.following { background: rgba(255,255,255,0.06); color: var(--text-muted); border: 1px solid var(--border-color); }
+
+        .empty-msg, .loading-msg { text-align: center; color: var(--text-muted); padding: 30px 10px; font-size: 0.85rem; }
+
+        .toast {
+            position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%) translateY(20px);
+            background: #120c1e; border: 1px solid var(--border-color); color: var(--text-main);
+            padding: 10px 18px; border-radius: var(--radius-pill); font-size: 0.8rem; font-weight: 600;
+            z-index: 900; opacity: 0; pointer-events: none; transition: all 0.3s ease; box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+        }
+        .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+    </style>
+</head>
+<body>
+    <div class="app-layout">
+        <header class="header">
+            <button type="button" class="back-btn" onclick="window.location.href='index.html'">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
+            </button>
+            <h1>اكتشاف مستخدمين</h1>
+        </header>
+
+        <div class="main-container">
+            <div class="search-box">
+                <input type="text" id="searchInput" placeholder="ابحث بالاسم..." oninput="handleSearchInput()">
+                <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            </div>
+
+            <div id="searchResultsSection" style="display:none;">
+                <div class="section-title">نتائج البحث</div>
+                <div id="searchResultsList" style="display:flex; flex-direction:column; gap:10px; margin-top:10px;"></div>
+            </div>
+
+            <div id="suggestedSection">
+                <div class="section-title">مستخدمون مقترحون</div>
+                <div id="suggestedList" style="display:flex; flex-direction:column; gap:10px; margin-top:10px;">
+                    <div class="loading-msg">جاري التحميل...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script>
+        function sanitize(str) {
+            if (typeof str !== 'string') return '';
+            return str.replace(/[&<>"']/g, (m) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#x27;' })[m]);
+        }
+        function showToast(msg) {
+            const t = document.getElementById('toast');
+            t.textContent = sanitize(msg);
+            t.classList.add('show');
+            clearTimeout(window._toastTimer);
+            window._toastTimer = setTimeout(() => t.classList.remove('show'), 2200);
+        }
+
+        let currentUser = null;
+        let userFollowing = [];
+        let allUsersCache = [];
+        let isProcessingFollow = false;
+        let searchDebounce = null;
+
+        // ====== إنشاء إشعار متابعة — نفس منطق باقي الصفحات ======
+        async function createNotification(recipientId, type, extra) {
+            try {
+                if (!currentUser || !recipientId || recipientId === currentUser.uid) return;
+                const { db, collection, addDoc, serverTimestamp } = window.ZephyrDiscover;
+                const senderName = currentUser.displayName || (currentUser.email ? currentUser.email.split('@')[0] : null) || 'Gamer';
+                await addDoc(collection(db, "notifications"), {
+                    recipientId, senderId: currentUser.uid, senderName: sanitize(senderName),
+                    type, read: false, createdAt: serverTimestamp(), ...extra
+                });
+            } catch (err) {
+                console.error('خطأ إنشاء إشعار:', err);
+            }
+        }
+
+        async function loadCurrentUserFollowing() {
+            try {
+                const { db, doc, getDoc } = window.ZephyrDiscover;
+                const snap = await getDoc(doc(db, "users", currentUser.uid));
+                userFollowing = snap.exists() ? (snap.data().following || []) : [];
+            } catch (e) {
+                console.error('خطأ تحميل قائمة المتابعة:', e);
+                userFollowing = [];
+            }
+        }
+
+        async function loadAllUsers() {
+            try {
+                const { db, collection, query, limit, getDocs } = window.ZephyrDiscover;
+                const snap = await getDocs(query(collection(db, "users"), limit(100)));
+                allUsersCache = [];
+                snap.forEach((docSnap) => {
+                    if (docSnap.id === currentUser.uid) return;
+                    const d = docSnap.data();
+                    allUsersCache.push({
+                        uid: docSnap.id,
+                        displayName: d.displayName || 'مستخدم ZEPHYR',
+                        bio: d.bio || ''
+                    });
+                });
+            } catch (e) {
+                console.error('خطأ تحميل المستخدمين:', e);
+                showToast('تعذر تحميل قائمة المستخدمين');
+                allUsersCache = [];
+            }
+        }
+
+        function renderUserRow(u) {
+            const initial = (u.displayName || '؟').charAt(0).toUpperCase();
+            const isFollowing = userFollowing.includes(u.uid);
+            return `
+                <div class="user-row" onclick="goToProfile('${u.uid}')">
+                    <div class="user-avatar">${sanitize(initial)}</div>
+                    <div class="user-info">
+                        <div class="user-name">${sanitize(u.displayName)}</div>
+                        <div class="user-bio">${sanitize(u.bio || 'لا يوجد وصف')}</div>
+                    </div>
+                    <button type="button" class="btn-follow-mini ${isFollowing ? 'following' : ''}" data-uid="${u.uid}"
+                        onclick="event.stopPropagation(); toggleFollowDiscover('${u.uid}', this)">
+                        ${isFollowing ? 'متابَع' : 'متابعة'}
+                    </button>
+                </div>
+            `;
+        }
+
+        function renderSuggested() {
+            const list = document.getElementById('suggestedList');
+            const pool = allUsersCache.filter(u => !userFollowing.includes(u.uid));
+            if (pool.length === 0) {
+                list.innerHTML = '<div class="empty-msg">لا يوجد مستخدمون جدد لاقتراحهم حالياً.</div>';
+                return;
+            }
+            const shuffled = [...pool].sort(() => Math.random() - 0.5).slice(0, 15);
+            list.innerHTML = shuffled.map(renderUserRow).join('');
+        }
+
+        function handleSearchInput() {
+            clearTimeout(searchDebounce);
+            searchDebounce = setTimeout(runSearch, 200);
+        }
+
+        function runSearch() {
+            const term = document.getElementById('searchInput').value.trim().toLowerCase();
+            const resultsSection = document.getElementById('searchResultsSection');
+            const list = document.getElementById('searchResultsList');
+
+            if (!term) {
+                resultsSection.style.display = 'none';
+                return;
+            }
+            resultsSection.style.display = 'block';
+            const matches = allUsersCache.filter(u => (u.displayName || '').toLowerCase().includes(term));
+            if (matches.length === 0) {
+                list.innerHTML = '<div class="empty-msg">لا توجد نتائج مطابقة.</div>';
+                return;
+            }
+            list.innerHTML = matches.slice(0, 30).map(renderUserRow).join('');
+        }
+
+        async function toggleFollowDiscover(targetId, btnEl) {
+            if (isProcessingFollow) return;
+            if (!currentUser || !targetId || targetId === currentUser.uid) return;
+            isProcessingFollow = true;
+
+            const isFollowing = userFollowing.includes(targetId);
+            btnEl.textContent = isFollowing ? 'جاري الإلغاء...' : 'جاري المتابعة...';
+
+            try {
+                const { db, doc, updateDoc, arrayUnion, arrayRemove, increment } = window.ZephyrDiscover;
+                if (isFollowing) {
+                    await updateDoc(doc(db, "users", currentUser.uid), { following: arrayRemove(targetId), followingCount: increment(-1) });
+                    await updateDoc(doc(db, "users", targetId), { followers: arrayRemove(currentUser.uid), followersCount: increment(-1) });
+                    userFollowing = userFollowing.filter(id => id !== targetId);
+                    showToast('تم إلغاء المتابعة');
+                } else {
+                    await updateDoc(doc(db, "users", currentUser.uid), { following: arrayUnion(targetId), followingCount: increment(1) });
+                    await updateDoc(doc(db, "users", targetId), { followers: arrayUnion(currentUser.uid), followersCount: increment(1) });
+                    userFollowing.push(targetId);
+                    createNotification(targetId, 'follow', {});
+                    showToast('تمت المتابعة ✅');
+                }
+                document.querySelectorAll(`.btn-follow-mini[data-uid="${targetId}"]`).forEach(b => {
+                    const nowFollowing = userFollowing.includes(targetId);
+                    b.classList.toggle('following', nowFollowing);
+                    b.textContent = nowFollowing ? 'متابَع' : 'متابعة';
+                });
+            } catch (e) {
+                console.error('خطأ المتابعة:', e);
+                btnEl.textContent = isFollowing ? 'متابَع' : 'متابعة';
+                showToast('حدث خطأ، حاول مجدداً');
+            } finally {
+                isProcessingFollow = false;
+            }
+        }
+
+        function goToProfile(uid) {
+            window.location.href = `profile.html?uid=${encodeURIComponent(uid)}`;
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const checkInterval = setInterval(() => {
+                if (window.ZephyrDiscover && window.ZephyrDiscover.auth) {
+                    clearInterval(checkInterval);
+                    const { auth, onAuthStateChanged } = window.ZephyrDiscover;
+                    onAuthStateChanged(auth, async (user) => {
+                        if (!user) { window.location.replace('login.html'); return; }
+                        currentUser = user;
+                        await loadCurrentUserFollowing();
+                        await loadAllUsers();
+                        renderSuggested();
+                    });
+                }
+            }, 100);
+        });
+
+        window.handleSearchInput = handleSearchInput;
+        window.toggleFollowDiscover = toggleFollowDiscover;
+        window.goToProfile = goToProfile;
+    </script>
+</body>
+</html>
